@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10111b">
+<title>Jurnal Perkembangan Diri</title>
+<style>
+:root{color-scheme:dark;--bg:#10111b;--panel:#191b29;--panel2:#202235;--line:#303249;--text:#f1f0f8;--muted:#a5a6bd;--accent:#b6a7f5;--accent2:#d8cffd;--danger:#ef9ba9}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#252440 0,transparent 36%),var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}button{cursor:pointer}
+.wrap{max-width:1100px;margin:auto;padding:28px 20px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}
+.brand{display:flex;gap:13px;align-items:center}.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,#7869b9,#34334e);display:grid;place-items:center;font-size:23px;box-shadow:0 8px 28px #0004}
+h1{font-size:clamp(1.35rem,3vw,2rem);letter-spacing:-.04em;margin:0}.sub{color:var(--muted);margin:3px 0 0;font-size:.9rem}
+.pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:.8rem;white-space:nowrap}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:20px;align-items:start}
+.card{background:linear-gradient(150deg,#1b1d2d,#171824);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 18px 55px #0002}
+h2{font-size:1.08rem;margin:0 0 17px;letter-spacing:-.02em}.field{display:grid;gap:7px;margin-bottom:15px}label{font-size:.88rem;color:#c5c5d8}
+input,textarea{width:100%;background:#11121e;border:1px solid #35364c;border-radius:12px;padding:12px 13px;color:var(--text);outline:none}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #b6a7f51c}
+textarea{min-height:230px;resize:vertical;line-height:1.7}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{border:1px solid transparent;border-radius:12px;padding:10px 16px;font-weight:650;transition:.15s}
+.primary{background:var(--accent);color:#171326}.primary:hover{background:var(--accent2)}
+.secondary{background:#26283a;color:var(--text);border-color:#3a3c54}.secondary:hover{background:#303249}
+.danger{color:var(--danger);background:transparent;border-color:#5a3441}
+.note{font-size:.8rem;color:var(--muted);margin:14px 0 0}
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.count{color:var(--muted);font-size:.82rem}
+.search{margin:0 0 13px}.entries{display:grid;gap:10px}
+.entry{border:1px solid var(--line);background:#141522;border-radius:15px;padding:14px;text-align:left;color:inherit;width:100%;display:block}
+.entry:hover{border-color:#71669f;background:#1c1d2d}.entry strong{display:block;font-size:.96rem;margin-bottom:3px}.entry small{color:var(--muted)}.preview{color:#c2c2d3;font-size:.88rem;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+.empty{border:1px dashed #3b3d53;border-radius:15px;padding:24px;text-align:center;color:var(--muted);font-size:.9rem}
+footer{text-align:center;color:#777991;font-size:.78rem;margin-top:22px}
+.toast{color:#c9c0fa;font-size:.85rem;min-height:1.3em;margin-top:8px}
+@media(max-width:760px){.wrap{padding:20px 14px 35px}header{align-items:flex-start}.pill{display:none}.grid{grid-template-columns:1fr}.card{padding:18px}textarea{min-height:190px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand"><div class="logo" aria-hidden="true">☾</div><div><h1>Jurnal Perkembangan Diri</h1><p class="sub">Ruang sunyi untuk mengenal diri, satu hari demi satu hari.</p></div></div>
+  <div class="pill">✦ Ruang pribadimu</div>
+</header>
+<main class="grid">
+<section class="card" aria-labelledby="formTitle">
+  <h2 id="formTitle">✧ Tulis halaman hari ini</h2>
+  <form id="journalForm">
+    <div class="field"><label for="date">Tanggal</label><input id="date" type="date" required></div>
+    <div class="field"><label for="title">Judul</label><input id="title" maxlength="100" placeholder="Apa yang ingin kamu ingat?" required></div>
+    <div class="field"><label for="body">Ceritakan harimu</label><textarea id="body" maxlength="20000" placeholder="Mulai dari hal kecil. Tidak harus sempurna..." required></textarea></div>
+    <div class="actions"><button class="btn primary" type="submit" id="saveBtn">Simpan jurnal</button><button class="btn secondary" type="button" id="newBtn">Halaman baru</button><button class="btn danger" type="button" id="deleteBtn" hidden>Hapus</button></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </form>
+  <p class="note">🔒 Jurnal disimpan di penyimpanan browser pada perangkat ini. Tidak ada akun atau sinkronisasi online. Jangan gunakan perangkat bersama untuk tulisan yang sangat pribadi.</p>
+</section>
+<section class="card" aria-labelledby="listTitle">
+  <div class="list-head"><h2 id="listTitle">✦ Jejak yang tersimpan</h2><span class="count" id="count">0 halaman</span></div>
+  <div class="field search"><label for="search">Cari jurnal</label><input id="search" type="search" placeholder="Cari judul atau isi..."></div>
+  <div class="entries" id="entries"></div>
+</section>
+</main>
+<footer>Pelan-pelan juga tetap bertumbuh. ✧</footer>
+</div>
+<script>
+(() => {
+ const KEY='jurnal-perkembangan-diri-v1';
+ const $=id=>document.getElementById(id);
+ const form=$('journalForm'), date=$('date'), title=$('title'), body=$('body'), entriesEl=$('entries');
+ let currentId=null;
+ const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+ const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}};
+ const write=data=>localStorage.setItem(KEY,JSON.stringify(data));
+ const fmt=value=>{if(!value)return '';const [y,m,d]=value.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})};
+ const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function render(){
+   const all=read().sort((a,b)=>b.date.localeCompare(a.date)||b.updated-b.updated);
+   const q=$('search').value.trim().toLowerCase();
+   const shown=all.filter(e=>(e.title+' '+e.body).toLowerCase().includes(q));
+   $('count').textContent=`${all.length} ${all.length===1?'halaman':'halaman'}`;
+   entriesEl.innerHTML=shown.length?shown.map(e=>`<button class="entry" type="button" data-id="${e.id}"><strong>${escapeHTML(e.title)}</strong><small>${fmt(e.date)}</small><div class="preview">${escapeHTML(e.body)}</div></button>`).join(''):`<div class="empty">${all.length?'Tidak ada jurnal yang cocok.':'Belum ada halaman. Tulisan pertamamu bisa dimulai hari ini.'}</div>`;
+ }
+ function clearForm(){
+   currentId=null;form.reset();date.value=today();$('formTitle').textContent='✧ Tulis halaman hari ini';$('saveBtn').textContent='Simpan jurnal';$('deleteBtn').hidden=true;$('toast').textContent='';title.focus();
+ }
+ form.addEventListener('submit',e=>{
+   e.preventDefault();
+   const data=read(), now=Date.now();
+   const item={id:currentId||String(now)+'-'+Math.random().toString(36).slice(2,8),date:date.value,title:title.value.trim(),body:body.value.trim(),updated:now};
+   if(!item.title||!item.body){$('toast').textContent='Isi judul dan ceritamu terlebih dahulu.';return}
+   try{const idx=data.findIndex(x=>x.id===currentId);if(idx>=0)data[idx]=item;else data.push(item);write(data);render();clearForm();$('toast').textContent='Jurnal tersimpan di perangkat ini.'}
+   catch{$('toast').textContent='Penyimpanan tidak tersedia. Coba periksa pengaturan browser.'}
+ });
+ $('newBtn').addEventListener('click',clearForm);
+ $('search').addEventListener('input',render);
+ entriesEl.addEventListener('click',e=>{
+   const button=e.target.closest('[data-id]');if(!button)return;
+   const item=read().find(x=>x.id===button.dataset.id);if(!item)return;
+   currentId=item.id;date.value=item.date;title.value=item.title;body.value=item.body;
+   $('formTitle').textContent='✧ Lanjutkan halaman';$('saveBtn').textContent='Perbarui jurnal';$('deleteBtn').hidden=false;$('toast').textContent='';window.scrollTo({top:0,behavior:'smooth'});
+ });
+ $('deleteBtn').addEventListener('click',()=>{
+   if(!currentId)return;
+   if(!confirm('Hapus jurnal ini dari perangkat?'))return;
+   write(read().filter(x=>x.id!==currentId));render();clearForm();$('toast').textContent='Jurnal dihapus.';
+ });
+ date.value=today();render();
+})();
+</script>
+</body>
+</html>

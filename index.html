@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10111b">
 <title>Jurnal Perkembangan Diri</title>
+<!-- Pustaka Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{color-scheme:dark;--bg:#10111b;--panel:#191b29;--panel2:#202235;--line:#303249;--text:#f1f0f8;--muted:#a5a6bd;--accent:#b6a7f5;--accent2:#d8cffd;--danger:#ef9ba9}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#252440 0,transparent 36%),var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
@@ -52,7 +54,7 @@ footer{text-align:center;color:#777991;font-size:.78rem;margin-top:22px}
     <div class="actions"><button class="btn primary" type="submit" id="saveBtn">Simpan jurnal</button><button class="btn secondary" type="button" id="newBtn">Halaman baru</button><button class="btn danger" type="button" id="deleteBtn" hidden>Hapus</button></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </form>
-  <p class="note">🔒 Jurnal disimpan di penyimpanan browser pada perangkat ini. Tidak ada akun atau sinkronisasi online. Jangan gunakan perangkat bersama untuk tulisan yang sangat pribadi.</p>
+  <p class="note">🔒 Jurnal tersimpan aman secara online di database Supabase.</p>
 </section>
 <section class="card" aria-labelledby="listTitle">
   <div class="list-head"><h2 id="listTitle">✦ Jejak yang tersimpan</h2><span class="count" id="count">0 halaman</span></div>
@@ -64,47 +66,82 @@ footer{text-align:center;color:#777991;font-size:.78rem;margin-top:22px}
 </div>
 <script>
 (() => {
- const KEY='jurnal-perkembangan-diri-v1';
- const $=id=>document.getElementById(id);
- const form=$('journalForm'), date=$('date'), title=$('title'), body=$('body'), entriesEl=$('entries');
- let currentId=null;
- const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
- const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}};
- const write=data=>localStorage.setItem(KEY,JSON.stringify(data));
- const fmt=value=>{if(!value)return '';const [y,m,d]=value.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})};
- const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function render(){
-   const all=read().sort((a,b)=>b.date.localeCompare(a.date)||b.updated-b.updated);
-   const q=$('search').value.trim().toLowerCase();
-   const shown=all.filter(e=>(e.title+' '+e.body).toLowerCase().includes(q));
-   $('count').textContent=`${all.length} ${all.length===1?'halaman':'halaman'}`;
-   entriesEl.innerHTML=shown.length?shown.map(e=>`<button class="entry" type="button" data-id="${e.id}"><strong>${escapeHTML(e.title)}</strong><small>${fmt(e.date)}</small><div class="preview">${escapeHTML(e.body)}</div></button>`).join(''):`<div class="empty">${all.length?'Tidak ada jurnal yang cocok.':'Belum ada halaman. Tulisan pertamamu bisa dimulai hari ini.'}</div>`;
- }
- function clearForm(){
-   currentId=null;form.reset();date.value=today();$('formTitle').textContent='✧ Tulis halaman hari ini';$('saveBtn').textContent='Simpan jurnal';$('deleteBtn').hidden=true;$('toast').textContent='';title.focus();
- }
- form.addEventListener('submit',e=>{
-   e.preventDefault();
-   const data=read(), now=Date.now();
-   const item={id:currentId||String(now)+'-'+Math.random().toString(36).slice(2,8),date:date.value,title:title.value.trim(),body:body.value.trim(),updated:now};
-   if(!item.title||!item.body){$('toast').textContent='Isi judul dan ceritamu terlebih dahulu.';return}
-   try{const idx=data.findIndex(x=>x.id===currentId);if(idx>=0)data[idx]=item;else data.push(item);write(data);render();clearForm();$('toast').textContent='Jurnal tersimpan di perangkat ini.'}
-   catch{$('toast').textContent='Penyimpanan tidak tersedia. Coba periksa pengaturan browser.'}
- });
- $('newBtn').addEventListener('click',clearForm);
- $('search').addEventListener('input',render);
- entriesEl.addEventListener('click',e=>{
-   const button=e.target.closest('[data-id]');if(!button)return;
-   const item=read().find(x=>x.id===button.dataset.id);if(!item)return;
-   currentId=item.id;date.value=item.date;title.value=item.title;body.value=item.body;
-   $('formTitle').textContent='✧ Lanjutkan halaman';$('saveBtn').textContent='Perbarui jurnal';$('deleteBtn').hidden=false;$('toast').textContent='';window.scrollTo({top:0,behavior:'smooth'});
- });
- $('deleteBtn').addEventListener('click',()=>{
-   if(!currentId)return;
-   if(!confirm('Hapus jurnal ini dari perangkat?'))return;
-   write(read().filter(x=>x.id!==currentId));render();clearForm();$('toast').textContent='Jurnal dihapus.';
- });
- date.value=today();render();
+  // --- KONFIGURASI SUPABASE ---
+  // Ganti teks di bawah ini dengan Project URL dan Publishable Key dari Supabase Anda
+  const SUPABASE_URL = 'MASUKKAN_PROJECT_URL_ANDA_DISINI';
+  const SUPABASE_ANON_KEY = 'MASUKKAN_PUBLISHABLE_KEY_ANDA_DISINI';
+  
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const TABLE_NAME = 'Jurnal'; // Sesuai dengan nama tabel yang Anda buat
+
+  const $=id=>document.getElementById(id);
+  const form=$('journalForm'), date=$('date'), title=$('title'), body=$('body'), entriesEl=$('entries');
+  let currentId=null;
+  let allEntries=[];
+
+  const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+  const fmt=value=>{if(!value)return '';const [y,m,d]=value.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})};
+  const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  async function fetchEntries(){
+    const { data, error } = await supabaseClient.from(TABLE_NAME).select('*').order('date', { ascending: false });
+    if(error){ console.error('Gagal memuat data:', error); return; }
+    allEntries = data || [];
+    render();
+  }
+
+  function render(){
+    const q=$('search').value.trim().toLowerCase();
+    const shown=allEntries.filter(e=>(e.title+' '+e.body).toLowerCase().includes(q));
+    $('count').textContent=`${allEntries.length} ${allEntries.length===1?'halaman':'halaman'}`;
+    entriesEl.innerHTML=shown.length?shown.map(e=>`<button class="entry" type="button" data-id="${e.id}"><strong>${escapeHTML(e.title)}</strong><small>${fmt(e.date)}</small><div class="preview">${escapeHTML(e.body)}</div></button>`).join(''):`<div class="empty">${allEntries.length?'Tidak ada jurnal yang cocok.':'Belum ada halaman. Tulisan pertamamu bisa dimulai hari ini.'}</div>`;
+  }
+
+  function clearForm(){
+    currentId=null;form.reset();date.value=today();$('formTitle').textContent='✧ Tulis halaman hari ini';$('saveBtn').textContent='Simpan jurnal';$('deleteBtn').hidden=true;$('toast').textContent='';title.focus();
+  }
+
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const itemDate=date.value, itemTitle=title.value.trim(), itemBody=body.value.trim();
+    if(!itemTitle||!itemBody){$('toast').textContent='Isi judul dan ceritamu terlebih dahulu.';return}
+
+    $('toast').textContent='Menyimpan...';
+    if(currentId){
+      // Update data yang ada
+      const { error } = await supabaseClient.from(TABLE_NAME).update({ date: itemDate, title: itemTitle, body: itemBody }).eq('id', currentId);
+      if(error){ $('toast').textContent='Gagal memperbarui jurnal.'; console.error(error); return; }$('toast').textContent='Jurnal berhasil diperbarui!';
+    } else {
+      // Tambah data baru
+      const { error } = await supabaseClient.from(TABLE_NAME).insert([{ date: itemDate, title: itemTitle, body: itemBody }]);
+      if(error){ $('toast').textContent='Gagal menyimpan jurnal ke database.'; console.error(error); return; }$('toast').textContent='Jurnal tersimpan di database!';
+    }
+    clearForm();
+    await fetchEntries();
+  });
+
+  $('newBtn').addEventListener('click',clearForm);$('search').addEventListener('input',render);
+
+  entriesEl.addEventListener('click',e=>{
+    const button=e.target.closest('[data-id]');if(!button)return;
+    const item=allEntries.find(x=>String(x.id)===String(button.dataset.id));if(!item)return;
+    currentId=item.id;date.value=item.date;title.value=item.title;body.value=item.body;
+    $('formTitle').textContent='✧ Lanjutkan halaman';$('saveBtn').textContent='Perbarui jurnal';$('deleteBtn').hidden=false;$('toast').textContent='';window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  $('deleteBtn').addEventListener('click',async()=>{
+    if(!currentId)return;
+    if(!confirm('Hapus jurnal ini dari database?'))return;
+    $('toast').textContent='Menghapus...';
+    const { error } = await supabaseClient.from(TABLE_NAME).delete().eq('id', currentId);
+    if(error){ $('toast').textContent='Gagal menghapus jurnal.'; console.error(error); return; }
+    clearForm();
+    await fetchEntries();
+    $('toast').textContent='Jurnal dihapus.';
+  });
+
+  date.value=today();
+  fetchEntries();
 })();
 </script>
 </body>
